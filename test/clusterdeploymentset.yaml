@@ -171,18 +171,18 @@ objects:
     namespaceFederationSpec:
       clusterRegistryNamespace: ${NAMESPACE}
       clusters:
-      - name: raffa-0
+      - name: ${CLUSTER_NAME}-0
         adminSecretRef: 
           namespace: ${NAMESPACE} 
-          name: raffa-0-admin-kubeconfig
-      - name: raffa-1
+          name: ${CLUSTER_NAME}-0-admin-kubeconfig
+      - name: ${CLUSTER_NAME}-1
         adminSecretRef: 
           namespace: ${NAMESPACE} 
-          name: raffa-1-admin-kubeconfig
-      - name: raffa-2
+          name: ${CLUSTER_NAME}-1-admin-kubeconfig
+      - name: ${CLUSTER_NAME}-2
         adminSecretRef: 
           namespace: ${NAMESPACE} 
-          name: raffa-2-admin-kubeconfig                    
+          name: ${CLUSTER_NAME}-2-admin-kubeconfig                    
       federatedTypes:  
       - kind: Service
         apiVersion: v1
@@ -191,10 +191,10 @@ objects:
       - kind: Route
         apiVersion: route.openshift.io/v1                      
       domains:
-      - raffa-fed.raffa.xyz  
+      - ${CLUSTER_NAME}-fed-${BASE_DOMAIN}  
     namespaceSelector:
       matchLabels:
-        federation: raffa
+        federation: ${CLUSTER_NAME}
     globalLoadBalancer:
       type: cloud-provider
       provider: aws
