@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: namespace-lifecycle-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: namespace-lifecycle-operator
+  template:
+    metadata:
+      labels:
+        name: namespace-lifecycle-operator
+    spec:
+      serviceAccountName: namespace-lifecycle-operator
+      containers:
+      - name: namespace-lifecycle-operator
+        # Replace this with the built image name
+        image: quay.io/raffaelespazzoli/federation-lifecycle-operator
+        command:
+        - federation-lifecycle-operator
+        imagePullPolicy: Always
+        env:
+          - name: FEDERATION_CONTROLLER_TEMPLATE
+            value: /templates/federation-controller.yaml
+          - name: FEDERATED_CLUSTER_TEMPLATE
+            value: /templates/federated-cluster.yaml
+          - name: REMOTE_FEDERATED_CLUSTER_TEMPLATE
+            value: /templates/federated-types.yaml
+          - name: FEDERATED_TYPES_TEMPLATE
+            value: /templates/federated-types.yaml      
+          - name: CLOUD_PROVIDER_GLOBALLOADBALANCER_TEMPLATE
+            value: /templates/cpglobaldns.yaml
+          - name: SELF_HOSTED_GLOBALLOADBALANCER_TEMPLATE
+            value: /templates/shglobaldns.yaml
+          - name: SERVICE_ACCOUNT_GLOBALLOADBALANCER_TEMPLATE
+            value: /templates/globaldns-sa.yaml                                                                                         
+          - name: WATCH_NAMESPACE
+            value: ""
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: OPERATOR_NAME
+            value: "namespace-lifecycle-operator"
+        volumeMounts:
+        - name: templates
+          mountPath: /templates   
+      volumes:
+        - name: templates
+          configMap:
+            name: templates             

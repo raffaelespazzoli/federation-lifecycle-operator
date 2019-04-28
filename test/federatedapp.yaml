@@ -1,0 +1,60 @@
+---
+apiVersion: types.federation.k8s.io/v1alpha1
+kind: FederatedDeployment
+metadata:
+  name: httpd
+  labels:
+    app: httpd
+spec:
+  template:
+    metadata:
+      labels:
+        app: httpd    
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: httpd
+      template:
+        metadata:
+          labels:
+            app: httpd
+        spec:
+          containers:
+          - name: httpd
+            image: registry.access.redhat.com/rhscl/httpd-24-rhel7
+  placement:
+    clusterNames:
+    - raffa-0
+    - raffa-1
+    - raffa-2             
+---
+apiVersion: types.federation.k8s.io/v1alpha1
+kind: FederatedService
+metadata:
+  name: httpd
+spec:
+  template:  
+    spec:
+      selector:
+        app: httpd
+      ports:
+      - protocol: TCP
+        port: 8080
+        targetPort: 8080
+      type: LoadBalancer
+  placement:
+    clusterNames:
+    - raffa-0
+    - raffa-1
+    - raffa-2    
+---      
+apiVersion: multiclusterdns.federation.k8s.io/v1alpha1
+kind: ServiceDNSRecord
+metadata:
+  name: httpd
+spec:
+  # The name of the corresponding `Domain`.
+  domainRef: raffa-fed-raffa-xyz
+  recordTTL: 300
+  externalName: myhttpd                  

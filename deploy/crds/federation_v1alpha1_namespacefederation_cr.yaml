@@ -1,0 +1,7 @@
+apiVersion: federation.raffa.systems/v1alpha1
+kind: NamespaceFederation
+metadata:
+  name: example-namespacefederation
+spec:
+  # Add fields here
+  size: 3

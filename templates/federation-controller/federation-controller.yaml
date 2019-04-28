@@ -1,0 +1,234 @@
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+    labels:
+      api: federation
+      kubebuilder.k8s.io: 1.0.0
+    name: federation-role
+  rules:
+  - apiGroups:
+    - ''
+    resources:
+    - 'configmaps'
+    - 'secrets'
+    - 'namespaces'
+    - 'events'
+    verbs:
+    - '*'    
+  - apiGroups:
+    - scheduling.federation.k8s.io
+    resources:
+    - '*'
+    verbs:
+    - '*'
+  - apiGroups:
+    - multiclusterdns.federation.k8s.io
+    resources:
+    - '*'
+    verbs:
+    - '*'
+  - apiGroups:
+    - core.federation.k8s.io
+    resources:
+    - '*'
+    verbs:
+    - '*'
+  - apiGroups:
+    - primitives.federation.k8s.io
+    resources:
+    - '*'
+    verbs:
+    - '*'
+  - apiGroups:
+    - clusterregistry.k8s.io
+    resources:
+    - '*'
+    verbs:
+    - '*'
+  - apiGroups:
+    - types.federation.k8s.io
+    resources:
+    - '*'
+    verbs:
+    - '*'    
+
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: federation-controller
+    namespace: {{ .ObjectMeta.Namespace }}
+
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: federation-rolebinding-{{ .ObjectMeta.Namespace }}
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: federation-role
+  subjects:
+  - kind: ServiceAccount
+    name: federation-controller
+    namespace: {{ .ObjectMeta.Namespace }}
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      api: federation
+      control-plane: controller-manager
+    name: federation-controller-manager-service
+    namespace: {{ .ObjectMeta.Namespace }}
+  spec:
+    clusterIP: None
+    selector:
+      api: federation
+      control-plane: controller-manager
+
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    creationTimestamp: null
+    labels:
+      api: federation
+      control-plane: controller-manager
+    name: federation-controller-manager
+    namespace: {{ .ObjectMeta.Namespace }}
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        api: federation
+        control-plane: controller-manager
+    serviceName: federation-controller-manager-service
+    template:
+      metadata:
+        labels:
+          api: federation
+          control-plane: controller-manager
+      spec:
+        containers:
+        - args:
+          - --limited-scope=true
+          - --federation-namespace=$(FEDERATION_NAMESPACE)
+          - --registry-namespace=$(CLUSTER_REGISTRY_NAMESPACE)
+          command:
+          - /root/controller-manager
+          image: "quay.io/kubernetes-multicluster/federation-v2:latest"
+          name: controller-manager
+          env:
+          - name: FEDERATION_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: CLUSTER_REGISTRY_NAMESPACE
+            value: {{ .Spec.ClusterRegistryNamespace }}
+        serviceAccountName: federation-controller     
+
+- apiVersion: apiextensions.k8s.io/v1beta1
+  kind: CustomResourceDefinition
+  metadata:
+    name: federatednamespaces.types.federation.k8s.io
+  spec:
+    additionalPrinterColumns:
+    - JSONPath: .metadata.creationTimestamp
+      description: |-
+        CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
+
+        Populated by the system. Read-only. Null for lists. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
+      name: Age
+      type: date
+    group: types.federation.k8s.io
+    names:
+      kind: FederatedNamespace
+      listKind: FederatedNamespaceList
+      plural: federatednamespaces
+      shortNames:
+      - fns
+      singular: federatednamespace
+    scope: Namespaced
+    validation:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              overrides:
+                items:
+                  properties:
+                    clusterName:
+                      type: string
+                    clusterOverrides:
+                      items:
+                        properties:
+                          path:
+                            type: string
+                          value:
+                            anyOf:
+                            - type: string
+                            - type: integer
+                            - type: boolean
+                            - type: object
+                            - type: array
+                        type: object
+                      type: array
+                  type: object
+                type: array
+              placement:
+                properties:
+                  clusterNames:
+                    items:
+                      type: string
+                    type: array
+                  clusterSelector:
+                    properties:
+                      matchExpressions:
+                        items:
+                          properties:
+                            key:
+                              type: string
+                            operator:
+                              type: string
+                            values:
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - key
+                          - operator
+                          type: object
+                        type: array
+                      matchLabels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    type: object
+                type: object
+            type: object
+    version: v1alpha1
+    versions:
+    - name: v1alpha1
+      served: true
+      storage: true    
+- apiVersion: core.federation.k8s.io/v1alpha1
+  kind: FederatedTypeConfig
+  metadata:
+    name: namespaces
+    namespace: {{ .Namespace }}
+  spec:
+    federatedType:
+      group: types.federation.k8s.io
+      kind: FederatedNamespace
+      pluralName: federatednamespaces
+      version: v1alpha1
+    namespaced: false
+    propagationEnabled: true
+    target:
+      kind: Namespace
+      pluralName: namespaces
+      version: v1             

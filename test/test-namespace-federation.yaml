@@ -1,0 +1,15 @@
+apiVersion: federation.raffa.systems/v1alpha1
+kind: NamespaceFederation
+metadata:
+  name: test-namespacefederation
+spec:
+  clusters:
+  - name: raffa2
+    adminSecretRef: 
+      namespace: kube-multicluster-public 
+      name: admin-raffa2
+  federatedTypes:  
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+  domains:
+  - mydomain.com          

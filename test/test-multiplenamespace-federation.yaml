@@ -1,0 +1,22 @@
+apiVersion: federation.raffa.systems/v1alpha1
+kind: MultipleNamespaceFederation
+metadata:
+  name: test-multiplenamespacefederation
+spec:
+  namespaceFederationSpec:
+    clusters:
+    - name: raffa2
+      adminSecretRef: 
+        namespace: kube-multicluster-public 
+        name: admin-raffa2
+    federatedTypes:  
+    - kind: Route
+      apiVersion: route.openshift.io/v1
+    domains:
+    - mydomain.com  
+  namespaceSelector:
+    matchLabels:
+      federation: raffa
+  globalLoadBalancer:
+    type: self-hosted
+    controllerURL: https://console.raffa1.casl-contrib.osp.rht-labs.com:8443    

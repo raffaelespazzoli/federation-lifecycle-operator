@@ -1,0 +1,59 @@
+- kind: Role
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: 'federation-controller-manager'
+    namespace: {{ .ObjectMeta.Namespace }}
+  rules:
+    - verbs:
+        - '*'
+      apiGroups:
+        - '*'
+      resources:
+        - '*'
+- kind: ClusterRole
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: 'federation-controller-manager:common-{{ .ObjectMeta.Namespace }}'
+    namespace: {{ .ObjectMeta.Namespace }}
+  rules:
+    - verbs:
+        - Get
+      nonResourceURLs:
+        - /healthz
+    - verbs:
+        - list
+      apiGroups:
+        - ''
+      resources:
+        - nodes
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: federation-controllee
+    namespace: {{ .ObjectMeta.Namespace }}   
+- kind: ClusterRoleBinding
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: 'federation-controller-manager:common-{{ .ObjectMeta.Namespace }}'
+  subjects:
+    - kind: ServiceAccount
+      name: federation-controllee
+      namespace: {{ .ObjectMeta.Namespace }}
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: 'federation-controller-manager:common-{{ .ObjectMeta.Namespace }}'  
+- kind: RoleBinding
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: 'federation-controller-manager'
+    namespace: {{ .ObjectMeta.Namespace }}
+  subjects:
+    - kind: ServiceAccount
+      name: federation-controllee
+      namespace: {{ .ObjectMeta.Namespace }}
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: 'federation-controller-manager'
+           

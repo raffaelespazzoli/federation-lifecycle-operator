@@ -1,0 +1,80 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: multiplenamespacefederations.federation.raffa.systems
+spec:
+  group: federation.raffa.systems
+  names:
+    kind: MultipleNamespaceFederation
+    listKind: MultipleNamespaceFederationList
+    plural: multiplenamespacefederations
+    singular: multiplenamespacefederation
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            globalLoadBalancer:
+              properties:
+                controllerURL:
+                  type: string
+                externalDNSArgs:
+                  items:
+                    type: string
+                  type: array
+                provider:
+                  type: string
+                type:
+                  enum:
+                  - cloud-provider
+                  - self-hosted
+                  type: string
+              type: object
+            namespaceFederationSpec:
+              properties:
+                clusterRegistryNamespace:
+                  type: string
+                clusters:
+                  items:
+                    properties:
+                      adminSecretRef:
+                        properties:
+                          name:
+                            type: string
+                          namespace:
+                            type: string
+                        type: object
+                      name:
+                        type: string
+                    type: object
+                  type: array
+                domains:
+                  items:
+                    pattern: (?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]
+                    type: string
+                  pattern: (?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]
+                  type: array
+                federatedTypes:
+                  items:
+                    type: object
+                  type: array
+              type: object
+            namespaceSelector:
+              type: object
+          type: object
+        status:
+          type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

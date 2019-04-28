@@ -1,0 +1,25 @@
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: {{ .SecretName }}
+    namespace: {{ .Namespace }}
+  type: Opaque      
+  stringData:
+    ca.crt: '{{ parseNewLines .CaCRT }}'
+    namespace: {{ .Namespace }}
+    service-ca.crt: '{{ parseNewLines .ServiceCaCRT }}'
+    token: {{ .Token }} 
+- apiVersion: core.federation.k8s.io/v1alpha1
+  kind: FederatedCluster
+  metadata:
+    name: {{ .Cluster }}
+    namespace: {{ .Namespace }}
+  spec:
+    clusterRef:
+      name: {{ .Cluster }}
+    secretRef:
+      name: {{ .SecretName }}
+
+
+
+

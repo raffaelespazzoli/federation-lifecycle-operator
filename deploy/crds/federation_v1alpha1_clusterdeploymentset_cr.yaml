@@ -1,0 +1,7 @@
+apiVersion: federation.raffa.systems/v1alpha1
+kind: ClusterDeploymentSet
+metadata:
+  name: example-clusterdeploymentset
+spec:
+  # Add fields here
+  size: 3

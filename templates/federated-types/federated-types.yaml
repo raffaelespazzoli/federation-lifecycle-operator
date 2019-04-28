@@ -1,0 +1,22 @@
+{{ range .}}
+- apiVersion: core.federation.k8s.io/v1alpha1
+  kind: FederatedTypeConfig
+  metadata:
+    name: {{ getLongName .SimpleType }}
+  spec:
+    namespaced: {{ namespaced .CRD }}      
+    propagationEnabled: true
+#
+    target:
+      kind: {{ .SimpleType.GroupVersionKind.Kind }}
+      pluralName: {{ getShortName .SimpleType }}
+{{ if .SimpleType.GroupVersionKind.Group }}      
+      group: {{ .SimpleType.GroupVersionKind.Group }}
+{{ end }}      
+      version: {{ .SimpleType.GroupVersionKind.Version }}
+    federatedType:
+      group: {{ .CRD.Spec.Group }}
+      kind: {{ .CRD.Spec.Names.Kind }}
+      version: {{ .CRD.Spec.Version }}
+      pluralName: {{ .CRD.Spec.Names.Plural }}
+{{ end }}    
