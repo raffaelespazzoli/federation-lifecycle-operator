@@ -1,5 +1,7 @@
 # Federation Lifecycle Operator
 
+[![Build Status](https://travis-ci.org/raffaelespazzoli/federation-lifecycle-operator.svg?branch=master)](https://travis-ci.org/raffaelespazzoli/federation-lifecycle-operator) [![Docker Repository on Quay](https://quay.io/repository/raffaelespazzoli/federation-lifecycle-operator/status "Docker Repository on Quay")](https://quay.io/repository/raffaelespazzoli/federation-lifecycle-operator)
+
 This operator attends to the entire lifecyle of federating clusters:
 
 1. [Creating Multiple Clusters](#Creating-Multiple-Clusters)
