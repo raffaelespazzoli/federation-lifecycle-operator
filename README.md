@@ -9,6 +9,8 @@ This operator attends to the entire lifecyle of federating clusters:
 3. [Federating Clusters on Multiple Namespaces](#Federating-Multiple-Namespaces)
 4. [Support for Global Load Balancer](#Adding-a-Global-Load-Balancer)
 
+Run a demo following these [instructions](./DEMO.md)
+
 The below diagram shows the relations between the involved controllers and CRDs
 
 ![controller CRD relation](./media/federation-lifecycle-controllers.png)
@@ -212,10 +214,11 @@ The following steps are needed to deploy this operator
 Create the needed CRDs
 
 ```shell
-oc apply -f crds/*
-oc apply -f deploy/crds/*_crd.yaml
+find ./crds -type f -name "*.yaml" | xargs -n 1 oc apply -f
+find ./deploy/crds/ -type f -name "*_crd.yaml"  | xargs -n 1 oc apply -f
 oc new-project namespace-lifecycle-operator
-oa apply -f deploy
+oc create configmap --from-file templates/federation-controller/federation-controller.yaml --from-file templates/federated-cluster/federated-cluster.yaml --from-file templates/remote-federated-cluster/remote-federated-cluster.yaml --from-file templates/federated-types/federated-types.yaml --from-file templates/globaldns/cpglobaldns.yaml --from-file templates/globaldns/shglobaldns.yaml --from-file templates/globaldns/globaldns-sa.yaml
+oc apply -f deploy
 ```
 
 Create the cluster registry namespace (here you will have to create refrences to clusters you want to federate)

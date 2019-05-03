@@ -1,56 +1,99 @@
+
 - apiVersion: rbac.authorization.k8s.io/v1
   kind: ClusterRole
   metadata:
     labels:
       api: federation
       kubebuilder.k8s.io: 1.0.0
-    name: federation-role
+    name: cluster-registry-reader
+    namespace: {{ .ObjectMeta.Namespace }}
   rules:
   - apiGroups:
-    - ''
+    - clusterregistry.k8s.io
     resources:
-    - 'configmaps'
-    - 'secrets'
-    - 'namespaces'
-    - 'events'
+    - clusters
     verbs:
-    - '*'    
+    - get
+    - list
+    - watch
+
+
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    labels:
+      api: federation
+      kubebuilder.k8s.io: 1.0.0
+    name: federation-role
+    namespace: {{ .ObjectMeta.Namespace }}
+  rules:
   - apiGroups:
     - scheduling.federation.k8s.io
     resources:
     - '*'
     verbs:
-    - '*'
+    - get
+    - watch
+    - list
+    - update
   - apiGroups:
     - multiclusterdns.federation.k8s.io
     resources:
     - '*'
     verbs:
-    - '*'
+    - get
+    - watch
+    - list
+    - create
+    - update
   - apiGroups:
     - core.federation.k8s.io
     resources:
     - '*'
     verbs:
-    - '*'
-  - apiGroups:
-    - primitives.federation.k8s.io
-    resources:
-    - '*'
-    verbs:
-    - '*'
-  - apiGroups:
-    - clusterregistry.k8s.io
-    resources:
-    - '*'
-    verbs:
-    - '*'
+    - get
+    - watch
+    - list
+    - create
+    - update
   - apiGroups:
     - types.federation.k8s.io
     resources:
     - '*'
     verbs:
-    - '*'    
+    - get
+    - watch
+    - list
+    - update
+  - apiGroups:
+    - clusterregistry.k8s.io
+    resources:
+    - clusters
+    verbs:
+    - get
+  - apiGroups:
+    - ""
+    resources:
+    - configmaps
+    verbs:
+    - get
+    - create
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - secrets
+    verbs:
+    - get
+  - apiGroups:
+    - ""
+    resources:
+    - events
+    verbs:
+    - get
+    - create
+    - update
+    - patch
 
 - apiVersion: v1
   kind: ServiceAccount
@@ -59,31 +102,32 @@
     namespace: {{ .ObjectMeta.Namespace }}
 
 - apiVersion: rbac.authorization.k8s.io/v1
-  kind: ClusterRoleBinding
+  kind: RoleBinding
   metadata:
-    name: federation-rolebinding-{{ .ObjectMeta.Namespace }}
+    name: federation-rolebinding
+    namespace: {{ .ObjectMeta.Namespace }}
   roleRef:
     apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
+    kind: Role
     name: federation-role
   subjects:
   - kind: ServiceAccount
     name: federation-controller
     namespace: {{ .ObjectMeta.Namespace }}
 
-- apiVersion: v1
-  kind: Service
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
   metadata:
-    labels:
-      api: federation
-      control-plane: controller-manager
-    name: federation-controller-manager-service
+    name: cluster-registry-reader-rolebinding-{{ .ObjectMeta.Namespace }}
     namespace: {{ .ObjectMeta.Namespace }}
-  spec:
-    clusterIP: None
-    selector:
-      api: federation
-      control-plane: controller-manager
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: cluster-registry-reader
+  subjects:
+  - kind: ServiceAccount
+    name: federation-controller
+    namespace: {{ .ObjectMeta.Namespace }}    
 
 - apiVersion: apps/v1
   kind: StatefulSet
@@ -109,9 +153,7 @@
       spec:
         containers:
         - args:
-          - --limited-scope=true
           - --federation-namespace=$(FEDERATION_NAMESPACE)
-          - --registry-namespace=$(CLUSTER_REGISTRY_NAMESPACE)
           command:
           - /root/controller-manager
           image: "quay.io/kubernetes-multicluster/federation-v2:latest"
@@ -121,8 +163,6 @@
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
-          - name: CLUSTER_REGISTRY_NAMESPACE
-            value: {{ .Spec.ClusterRegistryNamespace }}
         serviceAccountName: federation-controller     
 
 - apiVersion: apiextensions.k8s.io/v1beta1
@@ -231,4 +271,35 @@
     target:
       kind: Namespace
       pluralName: namespaces
-      version: v1             
+      version: v1         
+
+- apiVersion: core.federation.k8s.io/v1alpha1
+  kind: FederationConfig
+  metadata:
+    name: federation-v2
+    namespace: {{ .Namespace }}
+  spec:
+    scope: "Namespaced"
+    registry-namespace: {{ .Spec.ClusterRegistryNamespace }}
+    controller-duration:
+      available-delay: "20s"
+      unavailable-delay: "60s" 
+    leader-elect:
+      lease-duration: "15s"
+      renew-deadline: "10s" 
+      retry-period: "5s"
+      resource-lock: "configmaps"
+    cluster-health-check:
+      period-seconds:  10
+      failure-threshold: 3 
+      success-threshold: 1 
+      timeout-seconds: 3
+    feature-gates:
+    - name: PushReconciler
+      enabled:  true
+    - name: SchedulerPreferences
+      enabled: true
+    - name: CrossClusterServiceDiscovery
+      enabled: true
+    - name: FederatedIngress
+      enabled: true

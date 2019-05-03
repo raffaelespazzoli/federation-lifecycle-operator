@@ -6,8 +6,11 @@ import (
 	federationv1alpha1 "github.com/raffaelespazzoli/federation-lifecycle-operator/pkg/apis/federation/v1alpha1"
 	"github.com/raffaelespazzoli/federation-lifecycle-operator/pkg/controller/util"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -50,6 +53,37 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if err != nil {
 		return err
 	}
+
+	namespaceToMultipleNamespaceFederation := handler.ToRequestsFunc(
+		func(a handler.MapObject) []reconcile.Request {
+			res := []reconcile.Request{}
+			ns := a.Object.(*corev1.Namespace)
+			client := mgr.GetClient()
+			mnfs, err := findApplicableMultipleNamespaceFederation(client, ns)
+			if err != nil {
+				log.Error(err, "unable to find applicable MultipleNamespaceFederation for namespace", "namespace", ns.Name)
+				return []reconcile.Request{}
+			}
+			for _, mnf := range mnfs {
+				res = append(res, reconcile.Request{
+					NamespacedName: types.NamespacedName{
+						Name:      mnf.GetName(),
+						Namespace: mnf.GetNamespace(),
+					},
+				})
+			}
+			return res
+		})
+
+	// TODO(user): Modify this to be the types you create that are owned by the primary resource
+	// Watch for changes to secondary resource Pods and requeue the owner NamespaceConfig
+	err = c.Watch(&source.Kind{Type: &corev1.Namespace{}}, &handler.EnqueueRequestsFromMapFunc{
+		ToRequests: namespaceToMultipleNamespaceFederation,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -104,9 +138,9 @@ func (r *ReconcileMultipleNamespaceFederation) Reconcile(request reconcile.Reque
 	log.Info("selected namespaces", "namespaces", namespaces.Items)
 	for _, namespace := range namespaces.Items {
 		//err = r.CreateOrUpdateResource(instance, GetNamespaceFederation(instance, &namespace))
-		err = r.CreateOrUpdateResource(nil, "", GetNamespaceFederation(instance, &namespace))
+		err = r.CreateOrUpdateResource(nil, "", getNamespaceFederation(instance, &namespace))
 		if err != nil {
-			log.Error(err, "unable to create namespacefederation", "multiplenamespacefederation", instance, "namespace", namespace, "namespacefederation", GetNamespaceFederation(instance, &namespace))
+			log.Error(err, "unable to create namespacefederation", "multiplenamespacefederation", instance, "namespace", namespace, "namespacefederation", getNamespaceFederation(instance, &namespace))
 		}
 	}
 
@@ -117,7 +151,7 @@ func (r *ReconcileMultipleNamespaceFederation) Reconcile(request reconcile.Reque
 	return reconcile.Result{}, nil
 }
 
-func GetNamespaceFederation(instance *federationv1alpha1.MultipleNamespaceFederation, namespace *corev1.Namespace) *federationv1alpha1.NamespaceFederation {
+func getNamespaceFederation(instance *federationv1alpha1.MultipleNamespaceFederation, namespace *corev1.Namespace) *federationv1alpha1.NamespaceFederation {
 	return &federationv1alpha1.NamespaceFederation{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "NamespaceFederation",
@@ -129,4 +163,30 @@ func GetNamespaceFederation(instance *federationv1alpha1.MultipleNamespaceFedera
 		},
 		Spec: *instance.Spec.NamespaceFederationSpec.DeepCopy(),
 	}
+}
+
+func findApplicableMultipleNamespaceFederation(c client.Client, instance *corev1.Namespace) ([]federationv1alpha1.MultipleNamespaceFederation, error) {
+	multipleNamespaceFederationList := &federationv1alpha1.MultipleNamespaceFederationList{}
+	err := c.List(context.TODO(), &client.ListOptions{}, multipleNamespaceFederationList)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return []federationv1alpha1.MultipleNamespaceFederation{}, nil
+		}
+		// Error reading the object - requeue the request.
+		log.Error(err, "unable to retrieve the list of multiplenamespacefederation")
+		return []federationv1alpha1.MultipleNamespaceFederation{}, err
+	}
+	applicableMultipleNamespaceFederationList := []federationv1alpha1.MultipleNamespaceFederation{}
+	for _, multipleNamespaceFederation := range multipleNamespaceFederationList.Items {
+		selector, err := metav1.LabelSelectorAsSelector(multipleNamespaceFederation.Spec.NamespaceSelector)
+		if err != nil {
+			log.Error(err, "unable to create se;ector from label selector", "labelSelector", multipleNamespaceFederation.Spec.NamespaceSelector)
+			return []federationv1alpha1.MultipleNamespaceFederation{}, err
+		}
+		if selector.Matches(labels.Set(instance.Labels)) {
+			applicableMultipleNamespaceFederationList = append(applicableMultipleNamespaceFederationList, multipleNamespaceFederation)
+		}
+	}
+
+	return applicableMultipleNamespaceFederationList, nil
 }

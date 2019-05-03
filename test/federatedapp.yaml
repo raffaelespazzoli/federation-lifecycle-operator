@@ -55,6 +55,6 @@ metadata:
   name: httpd
 spec:
   # The name of the corresponding `Domain`.
-  domainRef: raffa-fed-raffa-xyz
+  domainRef: demo-fed-sandbox205-opentlc-com
   recordTTL: 300
   externalName: myhttpd                  

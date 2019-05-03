@@ -21,11 +21,11 @@ deploy the federation configuration:
 oc new-project demo
 oc process -f ./test/clusterdeploymentset.yaml \
    CLUSTER_NAME=demo \
-   SSH_KEY=$(cat ~/.ssh/sshkey-gcp.pub) \
+   SSH_KEY="$(cat ~/.ssh/sshkey-gcp.pub)" \
    PULL_SECRET="$(cat ./test/pull-secret.json)" \
    AWS_ACCESS_KEY_ID="$(cat ~/.aws/credentials | grep aws_access_key_id | awk '{ print$3 }')" \
    AWS_SECRET_ACCESS_KEY="$(cat ~/.aws/credentials | grep aws_secret_access_key | awk '{ print$3 }')" \
-   BASE_DOMAIN=sandbox596.opentlc.com \
+   BASE_DOMAIN=sandbox205.opentlc.com \
    NAMESPACE=demo \
    | oc apply -f - -n demo
 ```
@@ -55,13 +55,13 @@ done
 verify that `namespacefederation` instances have bee created in those namespaces:
 
 ```shell
-oc get namespacefderation --all-namespaces
+oc get namespacefederation --all-namespaces
 ```
 
 verify that `federatedconfigtypes` have been created in the federated namespaces:
 
 ```shell
-oc get federatedconfigtypes --all-namespaces
+oc get federatedtypeconfig --all-namespaces
 ```
 
 verify that `domains` have beed created in the federated namespaces:
@@ -87,7 +87,7 @@ oc get federatedclusters --all-namespaces
 At this point we can deploy an application in one of the federated namespaces
 
 ```shell
-oc apply ./test/federatedapp.yaml -n fns1
+oc apply -f ./test/federatedapp.yaml -n fns1
 ```
 
 Using the webconsole verify that the app has been deployed in all of the federated clusters
@@ -110,4 +110,12 @@ If you get an asnwer now you should be able to `curl` the application
 
 ```shell
 curl http://myhttpd.demo-fed-${BASE_DOMAIN}
+```
+
+To clean up:
+
+```shell
+for ns in fns1 fns2 ; do
+  oc delete namespace $ns
+done
 ```

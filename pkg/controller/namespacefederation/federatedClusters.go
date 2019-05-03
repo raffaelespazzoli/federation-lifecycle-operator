@@ -40,6 +40,7 @@ func (r *ReconcileNamespaceFederation) createOrUpdateFederatedClusters(instance 
 			},
 			nil,
 		}
+		return
 	}
 	if err != nil {
 		log.Error(err, "unable to reconcile federated cluster", "instance", instance)
