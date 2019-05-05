@@ -18,6 +18,7 @@ deploy the federation-lifecycle-operator, see [here](./README.md#Installetion)
 deploy the federation configuration:
 
 ```shell
+export BASE_DOMAIN=sandbox205.opentlc.com
 oc new-project demo
 oc process -f ./test/clusterdeploymentset.yaml \
    CLUSTER_NAME=demo \
@@ -25,7 +26,7 @@ oc process -f ./test/clusterdeploymentset.yaml \
    PULL_SECRET="$(cat ./test/pull-secret.json)" \
    AWS_ACCESS_KEY_ID="$(cat ~/.aws/credentials | grep aws_access_key_id | awk '{ print$3 }')" \
    AWS_SECRET_ACCESS_KEY="$(cat ~/.aws/credentials | grep aws_secret_access_key | awk '{ print$3 }')" \
-   BASE_DOMAIN=sandbox205.opentlc.com \
+   BASE_DOMAIN=${BASED_OMAIN} \
    NAMESPACE=demo \
    | oc apply -f - -n demo
 ```
@@ -87,7 +88,7 @@ oc get federatedclusters --all-namespaces
 At this point we can deploy an application in one of the federated namespaces
 
 ```shell
-oc apply -f ./test/federatedapp.yaml -n fns1
+cat ./test/federatedapp.yaml | envsubst | oc apply -f - -n fns1
 ```
 
 Using the webconsole verify that the app has been deployed in all of the federated clusters
@@ -106,7 +107,7 @@ Now verify that the name can be resolved:
 nslookup myhttpd.demo-fed-${BASE_DOMAIN}
 ```
 
-If you get an asnwer now you should be able to `curl` the application
+If you get an answer now you should be able to `curl` the application
 
 ```shell
 curl http://myhttpd.demo-fed-${BASE_DOMAIN}
@@ -115,6 +116,11 @@ curl http://myhttpd.demo-fed-${BASE_DOMAIN}
 To clean up:
 
 ```shell
+oc delete -f ./test/federatedapp.yaml -n fns1
+oc label fns1 federation-
+oc delete namespacefederation demo -n fns1
+oc label fns2 federation-
+oc delete namespacefederation demo -n fns2
 for ns in fns1 fns2 ; do
   oc delete namespace $ns
 done

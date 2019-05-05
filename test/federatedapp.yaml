@@ -25,9 +25,9 @@ spec:
             image: registry.access.redhat.com/rhscl/httpd-24-rhel7
   placement:
     clusterNames:
-    - raffa-0
-    - raffa-1
-    - raffa-2             
+    - demo-0
+    - demo-1
+    - demo-2             
 ---
 apiVersion: types.federation.k8s.io/v1alpha1
 kind: FederatedService
@@ -45,9 +45,9 @@ spec:
       type: LoadBalancer
   placement:
     clusterNames:
-    - raffa-0
-    - raffa-1
-    - raffa-2    
+    - demo-0
+    - demo-1
+    - demo-2    
 ---      
 apiVersion: multiclusterdns.federation.k8s.io/v1alpha1
 kind: ServiceDNSRecord
@@ -55,6 +55,6 @@ metadata:
   name: httpd
 spec:
   # The name of the corresponding `Domain`.
-  domainRef: demo-fed-sandbox205-opentlc-com
+  domainRef: demo-fed-${BASE_DOMAIN}
   recordTTL: 300
   externalName: myhttpd                  
