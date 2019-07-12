@@ -1,13 +1,13 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: namespace-lifecycle-operator
+  name: federation-lifecycle-operator
 subjects:
 - kind: ServiceAccount
-  name: namespace-lifecycle-operator
+  name: federation-lifecycle-operator
   # Replace this with the namespace the operator is deployed in.
-  namespace: namespace-lifecycle-operator
+  namespace: federation-lifecycle-operator
 roleRef:
   kind: ClusterRole
-  name: namespace-lifecycle-operator
+  name: federation-lifecycle-operator
   apiGroup: rbac.authorization.k8s.io

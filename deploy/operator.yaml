@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: namespace-lifecycle-operator
+  name: federation-lifecycle-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: namespace-lifecycle-operator
+      name: federation-lifecycle-operator
   template:
     metadata:
       labels:
-        name: namespace-lifecycle-operator
+        name: federation-lifecycle-operator
     spec:
-      serviceAccountName: namespace-lifecycle-operator
+      serviceAccountName: federation-lifecycle-operator
       containers:
-      - name: namespace-lifecycle-operator
+      - name: federation-lifecycle-operator
         # Replace this with the built image name
         image: quay.io/raffaelespazzoli/federation-lifecycle-operator
         command:
@@ -26,7 +26,7 @@ spec:
           - name: FEDERATED_CLUSTER_TEMPLATE
             value: /templates/federated-cluster.yaml
           - name: REMOTE_FEDERATED_CLUSTER_TEMPLATE
-            value: /templates/federated-types.yaml
+            value: /templates/remote-federated-cluster.yaml
           - name: FEDERATED_TYPES_TEMPLATE
             value: /templates/federated-types.yaml      
           - name: CLOUD_PROVIDER_GLOBALLOADBALANCER_TEMPLATE
@@ -42,7 +42,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.name
           - name: OPERATOR_NAME
-            value: "namespace-lifecycle-operator"
+            value: "federation-lifecycle-operator"
         volumeMounts:
         - name: templates
           mountPath: /templates   

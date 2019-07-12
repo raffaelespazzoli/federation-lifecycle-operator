@@ -216,17 +216,9 @@ Create the needed CRDs
 ```shell
 find ./crds -type f -name "*.yaml" | xargs -n 1 oc apply -f
 find ./deploy/crds/ -type f -name "*_crd.yaml"  | xargs -n 1 oc apply -f
-oc new-project namespace-lifecycle-operator
-oc create configmap --from-file templates/federation-controller/federation-controller.yaml --from-file templates/federated-cluster/federated-cluster.yaml --from-file templates/remote-federated-cluster/remote-federated-cluster.yaml --from-file templates/federated-types/federated-types.yaml --from-file templates/globaldns/cpglobaldns.yaml --from-file templates/globaldns/shglobaldns.yaml --from-file templates/globaldns/globaldns-sa.yaml
+oc new-project federation-lifecycle-operator
+oc create configmap templates --from-file templates/federation-controller/federation-controller.yaml --from-file templates/federated-cluster/federated-cluster.yaml --from-file templates/remote-federated-cluster/remote-federated-cluster.yaml --from-file templates/federated-types/federated-types.yaml --from-file templates/globaldns/cpglobaldns.yaml --from-file templates/globaldns/shglobaldns.yaml --from-file templates/globaldns/globaldns-sa.yaml
 oc apply -f deploy
-```
-
-Create the cluster registry namespace (here you will have to create refrences to clusters you want to federate)
-
-Deploy the operator
-
-```shell
-//TODO
 ```
 
 ## Development

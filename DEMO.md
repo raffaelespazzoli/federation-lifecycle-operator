@@ -6,7 +6,7 @@ We assume you have a 4.x cluster in AWS.
 deploy hive:
 
 ```shell
-mkdir -g $GOPATH/src/github.com/openshift
+mkdir -p $GOPATH/src/github.com/openshift
 cd $GOPATH/src/github.com/openshift
 git clone https://github.com/openshift/hive
 cd hive
@@ -26,7 +26,7 @@ oc process -f ./test/clusterdeploymentset.yaml \
    PULL_SECRET="$(cat ./test/pull-secret.json)" \
    AWS_ACCESS_KEY_ID="$(cat ~/.aws/credentials | grep aws_access_key_id | awk '{ print$3 }')" \
    AWS_SECRET_ACCESS_KEY="$(cat ~/.aws/credentials | grep aws_secret_access_key | awk '{ print$3 }')" \
-   BASE_DOMAIN=${BASED_OMAIN} \
+   BASE_DOMAIN=${BASE_DOMAIN} \
    NAMESPACE=demo \
    | oc apply -f - -n demo
 ```

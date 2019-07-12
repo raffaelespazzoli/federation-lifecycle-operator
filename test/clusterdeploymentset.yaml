@@ -57,7 +57,7 @@ parameters:
 - name: CLUSTER_IMAGE_SET
   displayName: ClusterImageSet to use for the cluster deployment
   description: Specify an alternate ClusterImageSet to reference from the cluster deployment. Default is latest OpenShift 4.0 CI images.
-  value: openshift-v4.0-latest
+  value: openshift-v4.1.4
 - name: REGION
   displayName: region in which deploy the cluster
   description: region in which deploy the cluster
@@ -125,7 +125,7 @@ objects:
           installerImagePullPolicy: "${INSTALLER_IMAGE_PULL_POLICY}"
           releaseImage: "${RELEASE_IMAGE}"
         imageSet:
-          name: "${CLUSTER_IMAGE_SET}"
+          name: "openshift-v4"
         sshKey:
           name: "${CLUSTER_NAME}-ssh-key"
         clusterName: ${CLUSTER_NAME}
@@ -198,4 +198,12 @@ objects:
     globalLoadBalancer:
       type: cloud-provider
       provider: aws
+
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: ClusterImageSet
+  metadata:
+    name: openshift-v4
+  spec:
+    hiveImage: quay.io/app-sre/hive:latest
+    releaseImage: quay.io/openshift-release-dev/ocp-release:4.1.4
                 
