@@ -97,6 +97,10 @@ rules:
   resources:
   - '*'
   verbs:
-  - '*'  
-
-  
+  - '*'
+- apiGroups:
+  - clusterregistry.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - '*'   

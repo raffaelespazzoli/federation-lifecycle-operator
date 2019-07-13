@@ -117,9 +117,9 @@ To clean up:
 
 ```shell
 oc delete -f ./test/federatedapp.yaml -n fns1
-oc label fns1 federation-
+oc label namespace fns1 federation-
 oc delete namespacefederation demo -n fns1
-oc label fns2 federation-
+oc label namespace fns2 federation-
 oc delete namespacefederation demo -n fns2
 for ns in fns1 fns2 ; do
   oc delete namespace $ns

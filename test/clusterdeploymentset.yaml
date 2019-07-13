@@ -68,6 +68,15 @@ parameters:
    
 
 objects:
+
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: ClusterImageSet
+  metadata:
+    name: openshift-v4
+  spec:
+    hiveImage: quay.io/app-sre/hive:latest
+    releaseImage: quay.io/openshift-release-dev/ocp-release:4.1.4
+
 - apiVersion: v1
   kind: Secret
   metadata:
@@ -199,11 +208,5 @@ objects:
       type: cloud-provider
       provider: aws
 
-- apiVersion: hive.openshift.io/v1alpha1
-  kind: ClusterImageSet
-  metadata:
-    name: openshift-v4
-  spec:
-    hiveImage: quay.io/app-sre/hive:latest
-    releaseImage: quay.io/openshift-release-dev/ocp-release:4.1.4
+
                 

@@ -217,8 +217,8 @@ Create the needed CRDs
 find ./crds -type f -name "*.yaml" | xargs -n 1 oc apply -f
 find ./deploy/crds/ -type f -name "*_crd.yaml"  | xargs -n 1 oc apply -f
 oc new-project federation-lifecycle-operator
-oc create configmap templates --from-file templates/federation-controller/federation-controller.yaml --from-file templates/federated-cluster/federated-cluster.yaml --from-file templates/remote-federated-cluster/remote-federated-cluster.yaml --from-file templates/federated-types/federated-types.yaml --from-file templates/globaldns/cpglobaldns.yaml --from-file templates/globaldns/shglobaldns.yaml --from-file templates/globaldns/globaldns-sa.yaml
-oc apply -f deploy
+oc create configmap templates --from-file templates/federation-controller/federation-controller.yaml --from-file templates/federated-cluster/federated-cluster.yaml --from-file templates/remote-federated-cluster/remote-federated-cluster.yaml --from-file templates/federated-types/federated-types.yaml --from-file templates/globaldns/cpglobaldns.yaml --from-file templates/globaldns/shglobaldns.yaml --from-file templates/globaldns/globaldns-sa.yaml -n federation-lifecycle-operator
+oc apply -f deploy -n federation-lifecycle-operator
 ```
 
 ## Development
