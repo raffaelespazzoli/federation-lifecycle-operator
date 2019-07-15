@@ -156,7 +156,7 @@
           - --federation-namespace=$(FEDERATION_NAMESPACE)
           command:
           - /root/controller-manager
-          image: "quay.io/kubernetes-multicluster/federation-v2:latest"
+          image: "quay.io/kubernetes-multicluster/federation-v2:v0.0.9"
           name: controller-manager
           env:
           - name: FEDERATION_NAMESPACE

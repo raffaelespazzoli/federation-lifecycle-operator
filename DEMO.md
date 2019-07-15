@@ -28,7 +28,7 @@ oc process -f ./test/clusterdeploymentset.yaml \
    AWS_SECRET_ACCESS_KEY="$(cat ~/.aws/credentials | grep aws_secret_access_key | awk '{ print$3 }')" \
    BASE_DOMAIN=${BASE_DOMAIN} \
    NAMESPACE=demo \
-   | oc apply -f - -n demo
+   -n demo | oc apply -f - -n demo
 ```
 
 check that a `ClusterDeploymentSet` has been created and that corresponding clusters are being created:
@@ -118,10 +118,20 @@ To clean up:
 ```shell
 oc delete -f ./test/federatedapp.yaml -n fns1
 oc label namespace fns1 federation-
-oc delete namespacefederation demo -n fns1
 oc label namespace fns2 federation-
+oc delete namespacefederation demo -n fns1
 oc delete namespacefederation demo -n fns2
+sleep 20
 for ns in fns1 fns2 ; do
   oc delete namespace $ns
 done
+oc process -f ./test/clusterdeploymentset.yaml \
+   CLUSTER_NAME=demo \
+   SSH_KEY="$(cat ~/.ssh/sshkey-gcp.pub)" \
+   PULL_SECRET="$(cat ./test/pull-secret.json)" \
+   AWS_ACCESS_KEY_ID="$(cat ~/.aws/credentials | grep aws_access_key_id | awk '{ print$3 }')" \
+   AWS_SECRET_ACCESS_KEY="$(cat ~/.aws/credentials | grep aws_secret_access_key | awk '{ print$3 }')" \
+   BASE_DOMAIN=${BASE_DOMAIN} \
+   NAMESPACE=demo \
+   -n demo | oc delete -f - -n demo
 ```

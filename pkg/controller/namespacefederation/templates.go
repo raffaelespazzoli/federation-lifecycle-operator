@@ -49,7 +49,7 @@ func InitializeFederatedClusterTemplates(federatedClusterTemplateFileName string
 	return nil
 }
 
-// InitializeTemplates initializes the temolates needed by this controller, it must be called at controller boot time
+// InitializeFederationControlPlaneTemplates initializes the temolates needed by this controller, it must be called at controller boot time
 func InitializeFederationControlPlaneTemplates(federationControllerTemplateFileName string) error {
 
 	text, err := ioutil.ReadFile(federationControllerTemplateFileName)

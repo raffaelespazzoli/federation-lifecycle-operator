@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	multierror "github.com/hashicorp/go-multierror"
 	federationv2v1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/apis/core/v1alpha1"
 	federationv1alpha1 "github.com/raffaelespazzoli/federation-lifecycle-operator/pkg/apis/federation/v1alpha1"
 	"github.com/raffaelespazzoli/federation-lifecycle-operator/pkg/controller/util"
@@ -58,13 +59,17 @@ func (r *ReconcileNamespaceFederation) _createOrUpdateFederatedClusters(instance
 		return err
 	}
 
+	var mErr *multierror.Error
+
 	log.Info("clusters to be deleted: ", "delClusters", deleteClusters)
 	// first we take care of deleting the deleteclusetr
 
 	for _, cluster := range deleteClusters {
 		err = r.manageDeleteCluster(cluster, instance)
-		log.Error(err, "Unable to successfully delete cluster", "cluster", cluster)
-		return err
+		if err != nil {
+			log.Error(err, "Unable to successfully delete cluster", "cluster", cluster)
+			mErr = multierror.Append(mErr, err)
+		}
 	}
 
 	//then we add new clusters.
@@ -78,24 +83,27 @@ func (r *ReconcileNamespaceFederation) _createOrUpdateFederatedClusters(instance
 			Name:      cluster.AdminSecretRef.Name,
 		}, &adminSecret)
 		if apierrors.IsNotFound(err) {
-			return secretNotFoundError{
+			mErr = multierror.Append(mErr, secretNotFoundError{
 				secretName:    cluster.AdminSecretRef.Name,
 				namespace:     cluster.AdminSecretRef.Namespace,
 				originalError: err,
-			}
+			})
+			break
 		}
 		if err != nil {
 			log.Error(err, "unable to retrieve admin secret", "namespace", cluster.AdminSecretRef.Namespace, "name", cluster.AdminSecretRef.Name, "cluster", cluster)
-			return err
+			mErr = multierror.Append(mErr, err)
+			break
 		}
 		err = r.manageAddCluster(cluster.Name, instance, &adminSecret)
 		if err != nil {
 			log.Error(err, "Unable to successfully add cluster", "cluster", cluster)
-			return err
+			mErr = multierror.Append(mErr, err)
+			break
 		}
 	}
 
-	return nil
+	return mErr.ErrorOrNil()
 
 }
 
