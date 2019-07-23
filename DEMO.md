@@ -13,7 +13,7 @@ cd hive
 make deploy
 ```
 
-deploy the federation-lifecycle-operator, see [here](./README.md#Installetion)
+deploy the federation-lifecycle-operator, see [here](./README.md#Installation)
 
 deploy the federation configuration:
 
@@ -134,4 +134,16 @@ oc process -f ./test/clusterdeploymentset.yaml \
    BASE_DOMAIN=${BASE_DOMAIN} \
    NAMESPACE=demo \
    -n demo | oc delete -f - -n demo
+```
+
+If any namespace gets stuck, use this script to find the resource whose finalazers are not working
+
+```shell
+for resource in $(oc api-resources -o name --no-headers=true --namespaced=true); do echo $resource; oc get $resource -n <namespace>; done
+```
+
+then use this script to remove the finalizers
+
+```shell
+oc patch <resource-type> <type> -n <namespace> -p '{"metadata":{"finalizers":[]}}'
 ```
