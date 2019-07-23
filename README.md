@@ -43,11 +43,11 @@ We add a new CRD called `ClusterDeploymentSet`, which can be used to declare the
 here you have ClusterDeployment fields, documented in the hive project
 ```
 
-`regions` determines in which regions the clusters will be created. The first cluster is created in the first region and so on. When there are no more reqions, we go back to the first region in an endless loop.
+`regions` determines in which regions the clusters will be created. The first cluster is created in the first region and so on. When there are no more regions, we go back to the first region in an endless loop.
 
 `ensureNoOverlappingCIDR`, makes sure that the machine, service and SDN CIDRs of the clusters do not overlap. This can be useful of you plan to create network tunnels between the clusters. A bit of math should be taken into account here, because if the CIDRs are too big and there are too many clusters you might run out of IPs at which point the controller will error out.
 
-`registerCluster` will make the controller register the newly create cluster as a `clusterregistry.Cluster`. Notice the new resource will be created in the same namespace as the ClusterDeploymenetSet. This prevents name collision and guarantees garbage collection.
+`registerCluster` will make the controller register the newly create cluster as a `clusterregistry.Cluster`. Notice the new resource will be created in the same namespace as the ClusterDeploymentSet. This prevents name collision and guarantees garbage collection.
 
 ## Federating Clusters on Single Namespace
 
