@@ -145,5 +145,5 @@ for resource in $(oc api-resources -o name --no-headers=true --namespaced=true);
 then use this script to remove the finalizers
 
 ```shell
-oc patch <resource-type> <type> -n <namespace> -p '{"metadata":{"finalizers":[]}}'
+oc patch <resource-type> <name> -n <namespace> -p '{"metadata":{"finalizers":[]}}'
 ```
